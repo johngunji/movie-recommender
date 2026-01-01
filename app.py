@@ -5,6 +5,9 @@ import joblib
 import requests
 import atexit
 from flask import Flask, render_template, request, jsonify
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
 
 app = Flask(__name__)
 
@@ -12,7 +15,12 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 movies = joblib.load(os.path.join(BASE_DIR, "models", "movies.pkl"))
-sim = np.load(os.path.join(BASE_DIR, "models", "cosine_sim.npy"))
+
+# Build TF-IDF and cosine similarity at startup
+tfidf = TfidfVectorizer(stop_words="english")
+tfidf_matrix = tfidf.fit_transform(movies["content"])
+sim = cosine_similarity(tfidf_matrix)
+
 
 # Normalize titles
 movies["title"] = movies["title"].str.lower().str.strip()
@@ -127,4 +135,5 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
