@@ -6,7 +6,6 @@ import requests
 import atexit
 from flask import Flask, render_template, request, jsonify
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 
 
 app = Flask(__name__)
@@ -17,9 +16,11 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 movies = joblib.load(os.path.join(BASE_DIR, "models", "movies.pkl"))
 
 # Build TF-IDF and cosine similarity at startup
-tfidf = TfidfVectorizer(stop_words="english")
+tfidf = TfidfVectorizer(
+    stop_words="english",
+    max_features=20000   # IMPORTANT: caps memory
+)
 tfidf_matrix = tfidf.fit_transform(movies["content"])
-sim = cosine_similarity(tfidf_matrix)
 
 
 # Normalize titles
@@ -100,23 +101,28 @@ def resolve_index(query):
 
     return int(matches.index[0])
 
+from sklearn.metrics.pairwise import linear_kernel  # place once, at top-level
+
+
 def recommend_like_this(query, n=10):
     idx = resolve_index(query)
     if idx is None:
         return []
 
-    scores = sim[idx]
+    # Compute similarity ON DEMAND (memory safe)
+    query_vec = tfidf_matrix[idx]
+    scores = linear_kernel(query_vec, tfidf_matrix).flatten()
     ranked = scores.argsort()[::-1]
+
     rec_idx = [i for i in ranked if i != idx][:n]
 
     results = movies.iloc[rec_idx][
         ["title", "type", "director", "cast", "language", "genres"]
     ].copy()
 
-    # Attach poster URLs
     results["poster"] = results["title"].apply(get_poster)
-
     return results.to_dict(orient="records")
+
 
 # ---------- ROUTES ----------
 @app.route("/")
@@ -135,5 +141,6 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
