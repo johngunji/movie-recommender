@@ -1,4 +1,5 @@
 import os
+import difflib
 import pandas as pd
 import requests
 from flask import Flask, render_template, request, jsonify
@@ -122,6 +123,17 @@ def get_poster(title):
     poster_cache[title] = "/static/placeholder.jpg"
     return poster_cache[title]
 
+def resolve_title_fuzzy(query, titles, cutoff=0.6):
+    """
+    Returns best matching title using fuzzy matching
+    """
+    matches = difflib.get_close_matches(
+        query,
+        titles,
+        n=1,
+        cutoff=cutoff
+    )
+    return matches[0] if matches else None
 def recommend_like_this(query, n=10, content_type="", language="", platform=""):
     query = query.lower().strip()
 
@@ -143,10 +155,17 @@ def recommend_like_this(query, n=10, content_type="", language="", platform=""):
     # Build local indices
     local_indices = pd.Series(data.index, index=data["title"])
 
-    if query not in local_indices:
+   title = query
+
+# Exact match
+if title not in local_indices:
+    # Fuzzy match fallback
+    title = resolve_title_fuzzy(title, local_indices.index)
+    if not title:
         return []
 
-    idx = local_indices[query]
+idx = local_indices[title]
+
 
     # Compute similarity ONLY on filtered data
     filtered_matrix = tfidf_matrix[data.index]
@@ -190,5 +209,6 @@ def recommend():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
