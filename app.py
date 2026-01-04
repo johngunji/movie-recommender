@@ -13,7 +13,17 @@ app = Flask(__name__)
 # ---------- PATHS ----------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-movies = pd.read_csv(os.path.join(BASE_DIR, "models", "data updated with prime.csv"))
+# ---------- LOAD & MERGE DATASETS ----------
+netflix_disney = pd.read_csv(os.path.join(BASE_DIR, "models", "data.csv"))
+prime = pd.read_csv(os.path.join(BASE_DIR, "models", "prime_movies.csv"))
+
+movies = pd.concat([netflix_disney, prime], ignore_index=True)
+
+# Normalize titles and remove duplicates
+movies["title"] = movies["title"].str.lower().str.strip()
+movies.drop_duplicates(subset="title", inplace=True)
+movies = movies.reset_index(drop=True)
+
 
 
 # Build TF-IDF and cosine similarity at startup
@@ -142,6 +152,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
