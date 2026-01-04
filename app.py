@@ -13,7 +13,7 @@ app = Flask(__name__)
 # ---------- PATHS ----------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-movies = pd.read_csv(os.path.join(BASE_DIR, "models", "movies.csv"))
+movies = pd.read_csv(os.path.join(BASE_DIR, "models", "data updated with prime.csv"))
 
 
 # Build TF-IDF and cosine similarity at startup
@@ -142,6 +142,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
