@@ -3,68 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <title>Movie Recommender</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-  <div class="container">
-    <h1>🎬 Movie Recommender</h1>
+<div class="container">
+  <h1>🎬 Movie Recommender</h1>
 
-    <!-- Search -->
-    <div class="search-box">
-      <input id="movie" placeholder="Enter movie name">
-      <button type="button" onclick="go()">Recommend</button>
-    </div>
+  <div class="search-box">
+    <input id="movie" placeholder="Enter movie name">
 
-    <!-- Results -->
-    <div id="results" class="grid"></div>
+    <select id="type">
+      <option value="">All</option>
+      <option value="movie">Movies</option>
+      <option value="tv show">TV Shows</option>
+    </select>
+
+    <select id="language">
+      <option value="">All Languages</option>
+      <option value="english">English</option>
+      <option value="hindi">Hindi</option>
+      <option value="telugu">Telugu</option>
+    </select>
+
+    <select id="platform">
+      <option value="">All Platforms</option>
+      <option value="Netflix / Disney">Netflix / Disney</option>
+      <option value="Prime Video">Prime Video</option>
+    </select>
+
+    <button onclick="go()">Recommend</button>
   </div>
 
-  <script>
-  function go() {
-    const d = document.getElementById("results");
-    d.innerHTML = `<div class="loader">Finding recommendations...</div>`;
+  <div id="results" class="grid"></div>
+</div>
 
-    fetch("/recommend", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        movie: document.getElementById("movie").value
-      })
+<script>
+function go() {
+  const d = document.getElementById("results");
+  d.innerHTML = "<div class='loader'>Finding recommendations...</div>";
+
+  fetch("/recommend", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      movie: document.getElementById("movie").value,
+      type: document.getElementById("type").value,
+      language: document.getElementById("language").value,
+      platform: document.getElementById("platform").value
     })
-    .then(r => r.json())
-    .then(data => {
-      d.innerHTML = "";
-
-      if (!data || data.length === 0) {
-        d.innerHTML = "<p>No results found</p>";
-        return;
-      }
-
-      let html = "";
-      data.forEach(m => {
-        html += `
-          <div class="card">
-            <img src="${m.poster}"
-                 onerror="this.src='/static/placeholder.jpg'">
-            <div class="card-info">
-              <div class="title">${m.title}</div>
-              <div class="genres">${m.genres}</div>
-            </div>
+  })
+  .then(r => r.json())
+  .then(data => {
+    d.innerHTML = "";
+    if (!data.length) {
+      d.innerHTML = "<p>No results found</p>";
+      return;
+    }
+    data.forEach(m => {
+      d.innerHTML += `
+        <div class="card">
+          <img src="${m.poster}" onerror="this.src='/static/placeholder.jpg'">
+          <div class="card-info">
+            <div class="title">${m.title}</div>
+            <div class="genres">${m.genres}</div>
+            <div class="meta">${m.language} • ${m.type} • ${m.platform}</div>
           </div>
-        `;
-      });
-
-      d.innerHTML = html;
-    })
-    .catch(err => {
-      console.error(err);
-      d.innerHTML = "<p>Error fetching data</p>";
+        </div>
+      `;
     });
-  }
-  </script>
+  })
+  .catch(() => {
+    d.innerHTML = "<p>Error fetching data</p>";
+  });
+}
+</script>
 
 </body>
 </html>
