@@ -77,10 +77,9 @@ def resolve_index(query):
     return int(matches.index[0])
 
 def recommend_like_this(query, n=10, content_type="", language="", platform=""):
-    idx = resolve_index(query)
-    if idx is None:
-        return []
+    query = query.lower().strip()
 
+    # Filter first
     data = movies.copy()
 
     if content_type:
@@ -92,24 +91,33 @@ def recommend_like_this(query, n=10, content_type="", language="", platform=""):
     if platform:
         data = data[data["platform"] == platform]
 
+    if data.empty:
+        return []
+
+    # Build local indices
+    local_indices = pd.Series(data.index, index=data["title"])
+
+    if query not in local_indices:
+        return []
+
+    idx = local_indices[query]
+
+    # Compute similarity ONLY on filtered data
+    filtered_matrix = tfidf_matrix[data.index]
+
     query_vec = tfidf_matrix[idx]
-    similarity = linear_kernel(query_vec, tfidf_matrix).flatten()
+    similarity = linear_kernel(query_vec, filtered_matrix).flatten()
 
-    pop = movies["popularity"].astype(float).values
-    if pop.max() > 0:
-        pop = pop / pop.max()
+    ranked = similarity.argsort()[::-1]
+    rec_idx = [data.index[i] for i in ranked if data.index[i] != idx][:n]
 
-    final_score = 0.85 * similarity + 0.15 * pop
-    ranked = final_score.argsort()[::-1]
-
-    rec_idx = [i for i in ranked if i != idx][:n]
-
-    results = data.iloc[rec_idx][
+    results = movies.loc[rec_idx][
         ["title", "type", "language", "genres", "director", "cast", "platform"]
     ].copy()
 
     results["poster"] = results["title"].apply(get_poster)
     return results.to_dict(orient="records")
+
 
 # ---------- ROUTES ----------
 @app.route("/")
@@ -136,3 +144,4 @@ def recommend():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
