@@ -155,21 +155,19 @@ def recommend_like_this(query, n=10, content_type="", language="", platform=""):
     # Build local indices
     local_indices = pd.Series(data.index, index=data["title"])
 
-   title = query
+    title = query
 
-# Exact match
-if title not in local_indices:
-    # Fuzzy match fallback
-    title = resolve_title_fuzzy(title, local_indices.index)
-    if not title:
-        return []
+    # Exact match
+    if title not in local_indices:
+        # Fuzzy match fallback
+        title = resolve_title_fuzzy(title, local_indices.index)
+        if not title:
+            return []
 
-idx = local_indices[title]
-
+    idx = local_indices[title]
 
     # Compute similarity ONLY on filtered data
     filtered_matrix = tfidf_matrix[data.index]
-
     query_vec = tfidf_matrix[idx]
     similarity = linear_kernel(query_vec, filtered_matrix).flatten()
 
@@ -209,6 +207,7 @@ def recommend():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
