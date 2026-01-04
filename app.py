@@ -13,7 +13,8 @@ app = Flask(__name__)
 # ---------- PATHS ----------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-movies = joblib.load(os.path.join(BASE_DIR, "models", "movies.pkl"))
+movies = pd.read_csv(os.path.join(BASE_DIR, "models", "movies.csv"))
+
 
 # Build TF-IDF and cosine similarity at startup
 tfidf = TfidfVectorizer(
@@ -141,6 +142,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
