@@ -4,6 +4,8 @@ import requests
 from flask import Flask, render_template, request, jsonify
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
+poster_cache = {}
+
 
 app = Flask(__name__)
 
@@ -48,33 +50,77 @@ tfidf_matrix = tfidf.fit_transform(movies["content"])
 indices = pd.Series(movies.index, index=movies["title"])
 
 # ---------- POSTER ----------
-OMDB_API_KEY = os.environ.get("OMDB_API_KEY")
+def clean_title(title):
+    return title.split(":")[0].strip()
 
-def get_poster(title):
+OMDB_API_KEY = os.environ.get("OMDB_API_KEY")
+def fetch_omdb(title):
+    OMDB_API_KEY = os.environ.get("OMDB_API_KEY")
     if not OMDB_API_KEY:
-        return "/static/placeholder.jpg"
+        return None
+
     try:
         r = requests.get(
             "http://www.omdbapi.com/",
-            params={"apikey": OMDB_API_KEY, "t": title},
+            params={"apikey": OMDB_API_KEY, "t": clean_title(title)},
             timeout=5
         ).json()
+
         poster = r.get("Poster")
         if poster and poster != "N/A":
             return poster
     except Exception:
         pass
-    return "/static/placeholder.jpg"
 
-# ---------- RECOMMENDER ----------
-def resolve_index(query):
-    query = query.lower().strip()
-    if query in indices:
-        return int(indices[query])
-    matches = movies[movies["title"].str.contains(query)]
-    if matches.empty:
+    return None
+
+
+def fetch_google_image(title):
+    GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+    GOOGLE_CX = os.environ.get("GOOGLE_CX")
+
+    if not GOOGLE_API_KEY or not GOOGLE_CX:
         return None
-    return int(matches.index[0])
+
+    try:
+        r = requests.get(
+            "https://www.googleapis.com/customsearch/v1",
+            params={
+                "key": GOOGLE_API_KEY,
+                "cx": GOOGLE_CX,
+                "q": f"{clean_title(title)} movie poster",
+                "searchType": "image",
+                "num": 1
+            },
+            timeout=5
+        ).json()
+
+        items = r.get("items")
+        if items:
+            return items[0].get("link")
+    except Exception:
+        pass
+
+    return None
+def get_poster(title):
+    if title in poster_cache:
+        return poster_cache[title]
+
+    # 1️⃣ Try OMDb
+    poster = fetch_omdb(title)
+    if poster:
+        poster_cache[title] = poster
+        return poster
+
+    # 2️⃣ Fallback to Google
+    poster = fetch_google_image(title)
+    if poster:
+        poster_cache[title] = poster
+        return poster
+
+    # 3️⃣ Placeholder
+    poster_cache[title] = "/static/placeholder.jpg"
+    return poster_cache[title]
 
 def recommend_like_this(query, n=10, content_type="", language="", platform=""):
     query = query.lower().strip()
@@ -144,4 +190,5 @@ def recommend():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
