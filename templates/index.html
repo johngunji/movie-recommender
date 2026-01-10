@@ -4,32 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Recommender | AI Powered</title>
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
 <div class="container py-5">
+
+    <!-- HEADER -->
     <header class="text-center mb-5 fade-in">
         <div class="icon-brand mb-3">🎬</div>
         <h1 class="display-4 fw-bold gradient-text">Movie Recommender</h1>
         <p class="lead text-secondary">Discover your next obsession with AI-curated picks.</p>
     </header>
 
+    <!-- SEARCH -->
     <div class="search-wrapper mb-5 fade-in delay-1">
         <div class="search-card p-4">
             <div class="row g-3 align-items-end">
+
                 <div class="col-lg-4 col-md-12">
                     <label class="form-label text-muted small text-uppercase fw-bold">Movie Title</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-transparent border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                        <input id="movie" class="form-control custom-input border-start-0 ps-0" placeholder="e.g. Inception, RRR...">
+                        <span class="input-group-text bg-transparent border-end-0 text-muted">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input id="movie" class="form-control custom-input border-start-0 ps-0"
+                               placeholder="e.g. Inception, RRR...">
                     </div>
                 </div>
+
                 <div class="col-lg-2 col-md-4">
                     <label class="form-label text-muted small text-uppercase fw-bold">Type</label>
                     <select id="type" class="form-select custom-input">
@@ -38,6 +45,7 @@
                         <option value="tv show">TV Shows</option>
                     </select>
                 </div>
+
                 <div class="col-lg-2 col-md-4">
                     <label class="form-label text-muted small text-uppercase fw-bold">Language</label>
                     <select id="language" class="form-select custom-input">
@@ -47,6 +55,7 @@
                         <option value="telugu">Telugu</option>
                     </select>
                 </div>
+
                 <div class="col-lg-2 col-md-4">
                     <label class="form-label text-muted small text-uppercase fw-bold">Platform</label>
                     <select id="platform" class="form-select custom-input">
@@ -55,47 +64,59 @@
                         <option value="Prime Video">Prime Video</option>
                     </select>
                 </div>
+
                 <div class="col-lg-2 col-md-12">
-                    <button onclick="fetchRecommendations()" class="btn btn-recommend w-100 py-2">
+                    <button onclick="fetchRecommendations(true)"
+                            class="btn btn-recommend w-100 py-2">
                         <span id="btn-text">Recommend</span>
-                        <span id="btn-loader" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        <span id="btn-loader"
+                              class="spinner-border spinner-border-sm d-none"></span>
                     </button>
                 </div>
+
             </div>
         </div>
     </div>
-    <div class="text-center mt-4">
-    <button id="showMoreBtn"
-            onclick="loadMore()"
-            class="btn btn-outline-light px-5 py-2 d-none">
-        Show More
-    </button>
-</div>
 
-
-    <div id="results" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4 fade-in delay-2">
+    <!-- RESULTS -->
+    <div id="results"
+         class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4 fade-in delay-2">
         <div class="col-12 text-center py-5 text-muted">
             <i class="bi bi-film display-1 opacity-25"></i>
             <p class="mt-3">Ready to search? Enter a movie above.</p>
         </div>
     </div>
+
+    <!-- SHOW MORE -->
+    <div class="text-center mt-5">
+        <button id="showMoreBtn"
+                onclick="loadMore()"
+                class="btn btn-outline-light px-5 py-2 d-none">
+            Show More
+        </button>
+    </div>
+
 </div>
-<div id="results" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4 fade-in delay-2">
 
-
-<div class="modal fade" id="movieModal" tabindex="-1" aria-hidden="true">
+<!-- MODAL -->
+<div class="modal fade" id="movieModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content glass-modal">
             <div class="modal-header border-0">
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center pt-0 pb-4">
-                <img id="modal-img" src="" class="img-fluid rounded shadow-lg mb-3" style="max-height: 350px; object-fit: cover;">
+                <img id="modal-img" class="img-fluid rounded shadow-lg mb-3"
+                     style="max-height:350px;object-fit:cover">
                 <h3 id="modal-title" class="gradient-text fw-bold mb-2"></h3>
-                <p id="modal-genres" class="text-secondary text-uppercase small letter-spacing-2 mb-3"></p>
+                <p id="modal-genres"
+                   class="text-secondary text-uppercase small mb-3"></p>
                 <div class="d-flex justify-content-center gap-2">
-                    <span id="modal-platform" class="badge rounded-pill bg-gradient-primary px-3 py-2"></span>
-                    <span id="modal-lang" class="badge rounded-pill bg-dark border border-secondary px-3 py-2"></span>
+                    <span id="modal-platform"
+                          class="badge rounded-pill bg-gradient-primary px-3 py-2"></span>
+                    <span id="modal-lang"
+                          class="badge rounded-pill bg-dark border border-secondary px-3 py-2"></span>
                 </div>
             </div>
         </div>
@@ -109,125 +130,81 @@ let offset = 0;
 const LIMIT = 10;
 let lastQuery = {};
 
-async function fetchRecommendations(reset = true) {
-    const movieInput = document.getElementById("movie");
-    const resultsContainer = document.getElementById("results");
+async function fetchRecommendations(reset=true) {
+    const results = document.getElementById("results");
+    const showMoreBtn = document.getElementById("showMoreBtn");
     const btnText = document.getElementById("btn-text");
     const btnLoader = document.getElementById("btn-loader");
-    const showMoreBtn = document.getElementById("showMoreBtn");
-
-    if (!movieInput.value.trim()) {
-        movieInput.classList.add("is-invalid");
-        setTimeout(() => movieInput.classList.remove("is-invalid"), 2000);
-        return;
-    }
 
     if (reset) {
         offset = 0;
-        resultsContainer.innerHTML = "";
+        results.innerHTML = "";
         showMoreBtn.classList.add("d-none");
     }
 
     lastQuery = {
-        movie: movieInput.value,
-        type: document.getElementById("type").value,
-        language: document.getElementById("language").value,
-        platform: document.getElementById("platform").value
+        movie: movie.value,
+        type: type.value,
+        language: language.value,
+        platform: platform.value
     };
 
     btnText.classList.add("d-none");
     btnLoader.classList.remove("d-none");
 
-    try {
-        const response = await fetch("/recommend", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                ...lastQuery,
-                start: offset,
-                limit: LIMIT
-            })
-        });
+    const res = await fetch("/recommend", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({...lastQuery, start: offset, limit: LIMIT})
+    });
 
-        const data = await response.json();
+    const data = await res.json();
 
-        if (!data || data.length === 0) {
-            if (offset === 0) {
-                resultsContainer.innerHTML = `
-                    <div class="col-12 text-center py-5">
-                        <i class="bi bi-emoji-frown display-4 mb-3 d-block"></i>
-                        <h5>No matches found</h5>
-                        <p class="small text-muted">Try a different movie or filters.</p>
-                    </div>`;
-            }
-            showMoreBtn.classList.add("d-none");
-            return;
-        }
-
-        data.forEach((m, index) => {
-            const safeTitle = m.title.replace(/'/g, "&apos;");
-            const delay = index * 60;
-
-            const cardHTML = `
-            <div class="col" style="animation: fadeInUp 0.5s ease forwards ${delay}ms; opacity: 0;">
-                <div class="card movie-card h-100"
-                     onclick="openModal('${safeTitle}', '${m.poster}', '${m.genres}', '${m.platform}', '${m.language}')">
-                    <div class="img-wrapper">
-                        <img src="${m.poster}"
-                             onerror="this.src='https://via.placeholder.com/300x450/111/555?text=No+Poster'">
-                        <div class="overlay">
-                            <i class="bi bi-play-circle-fill display-4 text-white"></i>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="movie-genres text-truncate">${m.genres}</div>
-                        <div class="movie-title text-truncate">${m.title}</div>
-                        <div class="d-flex justify-content-between mt-2">
-                            <span class="badge bg-dark border border-secondary">${m.language.toUpperCase()}</span>
-                            <span class="small text-accent fw-bold">${m.type === 'tv show' ? 'TV' : 'MOVIE'}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-            resultsContainer.insertAdjacentHTML("beforeend", cardHTML);
-        });
-
-        offset += LIMIT;
-        showMoreBtn.classList.remove("d-none");
-
-    } catch (err) {
-        console.error(err);
-        resultsContainer.innerHTML =
-            `<p class="text-danger text-center">Something went wrong.</p>`;
-    } finally {
-        btnText.classList.remove("d-none");
-        btnLoader.classList.add("d-none");
+    if (!data.length && offset === 0) {
+        results.innerHTML = "<p class='text-center text-muted'>No results found</p>";
+        return;
     }
+
+    data.forEach((m,i)=>{
+        results.insertAdjacentHTML("beforeend", `
+        <div class="col" style="animation:fadeInUp .4s ${i*60}ms forwards;opacity:0">
+            <div class="card movie-card h-100"
+                 onclick="openModal('${m.title}','${m.poster}','${m.genres}','${m.platform}','${m.language}')">
+                <img src="${m.poster}" class="card-img-top"
+                     onerror="this.src='https://via.placeholder.com/300x450?text=No+Poster'">
+                <div class="card-body">
+                    <div class="movie-genres">${m.genres}</div>
+                    <div class="movie-title">${m.title}</div>
+                </div>
+            </div>
+        </div>`);
+    });
+
+    offset += LIMIT;
+    if (data.length === LIMIT) showMoreBtn.classList.remove("d-none");
+
+    btnText.classList.remove("d-none");
+    btnLoader.classList.add("d-none");
 }
 
-function loadMore() {
-    fetchRecommendations(false);
-}
+function loadMore() { fetchRecommendations(false); }
 
-function openModal(title, poster, genres, platform, lang) {
-    document.getElementById("modal-title").innerText = title;
-    document.getElementById("modal-img").src = poster;
-    document.getElementById("modal-genres").innerText = genres;
-    document.getElementById("modal-platform").innerText = platform || "N/A";
-    document.getElementById("modal-lang").innerText = lang.toUpperCase();
-
-    new bootstrap.Modal(document.getElementById("movieModal")).show();
+function openModal(t,p,g,pl,l) {
+    modalTitle.innerText=t;
+    modalImg.src=p;
+    modalGenres.innerText=g;
+    modalPlatform.innerText=pl||"N/A";
+    modalLang.innerText=l.toUpperCase();
+    new bootstrap.Modal(movieModal).show();
 }
 </script>
 
-
 <style>
-/* Animation Keyframes inside HTML for simplicity */
 @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {opacity:0;transform:translateY(20px)}
+    to {opacity:1;transform:translateY(0)}
 }
 </style>
+
 </body>
 </html>
-
