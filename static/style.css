@@ -1,166 +1,222 @@
 /* ===============================
-   Variables & Core Theme
+   1. Core Variables & Reset
    =============================== */
 :root {
-    --primary-gradient: linear-gradient(45deg, #ff416c, #ff4b2b);
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --card-bg: #1a1a1a;
-    --text-muted: #888;
+    --primary-gradient: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+    --bg-dark: #0f0f0f;
+    --bg-card: #161616;
+    --text-main: #ffffff;
+    --text-muted: #a0a0a0;
     --accent-color: #ff416c;
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-bg: rgba(255, 255, 255, 0.03);
 }
 
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #0f0f0f;
-    color: #ffffff;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
 }
 
 /* ===============================
-   Typography
+   2. Typography & Branding
    =============================== */
 .gradient-text {
     background: var(--primary-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    font-weight: 800;
+    letter-spacing: -0.5px;
 }
 
-.lead {
-    color: var(--text-muted);
+.icon-brand {
+    font-size: 3rem;
+    filter: drop-shadow(0 0 10px rgba(255, 65, 108, 0.3));
+}
+
+.text-accent {
+    color: var(--accent-color);
+}
+
+.letter-spacing-2 {
+    letter-spacing: 2px;
 }
 
 /* ===============================
-   Search Section (Glassmorphism)
+   3. Search Component (Glassmorphism)
    =============================== */
 .search-card {
     background: var(--glass-bg);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
+/* Form Inputs */
 .custom-input {
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: #ffffff !important;
-    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: white !important;
+    border-radius: 12px;
+    padding: 10px 15px;
     transition: all 0.3s ease;
 }
 
-.custom-input::placeholder {
-    color: #aaa;
-}
-
 .custom-input:focus {
-    background: rgba(255, 255, 255, 0.15) !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
     border-color: var(--accent-color) !important;
-    box-shadow: 0 0 15px rgba(255, 65, 108, 0.3) !important;
+    box-shadow: 0 0 0 4px rgba(255, 65, 108, 0.15) !important;
 }
 
-/* ===============================
-   Recommend Button
-   =============================== */
+.custom-input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* Fix Dropdown Options on Dark Mode */
+.custom-input option {
+    background-color: var(--bg-card);
+    color: white;
+    padding: 10px;
+}
+
+/* Search Button */
 .btn-recommend {
     background: var(--primary-gradient);
     border: none;
     color: white;
     font-weight: 600;
-    border-radius: 10px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 12px;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);
 }
 
 .btn-recommend:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4);
-    color: #ffffff;
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(255, 65, 108, 0.5);
+    color: white;
+}
+
+.btn-recommend:active {
+    transform: scale(0.98);
 }
 
 /* ===============================
-   Movie Cards
+   4. Movie Cards
    =============================== */
 .movie-card {
-    background: var(--card-bg);
-    border: none;
-    border-radius: 15px;
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
     overflow: hidden;
     cursor: pointer;
-    height: 100%;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .movie-card:hover {
-    transform: translateY(-10px) scale(1.02);
+    transform: translateY(-10px);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 65, 108, 0.3);
+}
+
+/* Image Container with Overlay */
+.img-wrapper {
+    position: relative;
+    overflow: hidden;
+    height: 320px;
 }
 
 .movie-card img {
-    height: 320px;
-    object-fit: cover;
+    height: 100%;
     width: 100%;
-    border-bottom: 3px solid var(--accent-color);
+    object-fit: cover;
+    transition: transform 0.5s ease;
 }
 
+.movie-card:hover img {
+    transform: scale(1.05);
+}
+
+/* Play Icon Overlay */
+.overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.movie-card:hover .overlay {
+    opacity: 1;
+}
+
+/* Card Content */
 .card-body {
-    padding: 1.2rem;
+    padding: 1.25rem;
+    background: linear-gradient(180deg, var(--bg-card) 0%, #111 100%);
 }
 
 .movie-title {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 700;
-    margin-bottom: 5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    color: #fff;
+    margin-bottom: 4px;
 }
 
 .movie-genres {
     font-size: 0.75rem;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 1.2px;
-}
-
-.movie-meta {
-    font-size: 0.8rem;
-    color: var(--accent-color);
-    font-weight: 600;
-    margin-top: 8px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
 }
 
 /* ===============================
-   Loading State
+   5. Modal Styling
    =============================== */
-.loader {
-    grid-column: 1 / -1;
-    padding: 100px 0;
-    text-align: center;
+.glass-modal {
+    background: #1a1a1a;
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-.spinner-border {
-    width: 3rem;
-    height: 3rem;
-    color: var(--accent-color);
+.bg-gradient-primary {
+    background: var(--primary-gradient);
+    border: none;
 }
 
 /* ===============================
-   Modal Styling
+   6. Utilities & Animations
    =============================== */
-.modal-content {
-    border-radius: 20px;
-    background-color: #111;
+.fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+    opacity: 0;
 }
 
-.modal-body img {
-    border-radius: 12px;
+.delay-1 { animation-delay: 0.2s; }
+.delay-2 { animation-delay: 0.4s; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.modal-body h2 {
-    font-weight: 800;
+/* Validation Shake Animation */
+.is-invalid {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    border-color: #ff4b2b !important;
 }
 
-.badge {
-    font-size: 0.8rem;
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
 }
