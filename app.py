@@ -5,12 +5,8 @@ import requests
 from flask import Flask, render_template, request, jsonify
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
-poster_cache = {}
-
 
 app = Flask(__name__)
-
-# ---------- PATH ----------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ---------- LOAD DATA ----------
@@ -32,155 +28,121 @@ movies.reset_index(drop=True, inplace=True)
 if "content" not in movies.columns:
     movies["content"] = (
         movies["genres"] + " " +
-        movies["genres"] + " " +
         movies["cast"] + " " +
         movies["director"] + " " +
         movies["description"]
     )
 
-# ---------- POPULARITY SAFE ----------
-if "popularity" not in movies.columns:
-    movies["popularity"] = 0
-
 # ---------- TF-IDF ----------
-tfidf = TfidfVectorizer(
-    stop_words="english",
-    max_features=20000
-)
+tfidf = TfidfVectorizer(stop_words="english", max_features=20000)
 tfidf_matrix = tfidf.fit_transform(movies["content"])
-indices = pd.Series(movies.index, index=movies["title"])
 
-# ---------- POSTER ----------
+# ---------- POSTER CACHE ----------
+poster_cache = {}
+
 def clean_title(title):
     return title.split(":")[0].strip()
 
-OMDB_API_KEY = os.environ.get("OMDB_API_KEY")
 def fetch_omdb(title):
-    OMDB_API_KEY = os.environ.get("OMDB_API_KEY")
-    if not OMDB_API_KEY:
+    key = os.environ.get("OMDB_API_KEY")
+    if not key:
         return None
-
     try:
         r = requests.get(
             "http://www.omdbapi.com/",
-            params={"apikey": OMDB_API_KEY, "t": clean_title(title)},
+            params={"apikey": key, "t": clean_title(title)},
             timeout=5
         ).json()
-
         poster = r.get("Poster")
         if poster and poster != "N/A":
             return poster
     except Exception:
         pass
-
     return None
 
-
-def fetch_google_image(title):
-    GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
-    GOOGLE_CX = os.environ.get("GOOGLE_CX")
-
-    if not GOOGLE_API_KEY or not GOOGLE_CX:
+def fetch_google(title):
+    key = os.environ.get("GOOGLE_API_KEY")
+    cx = os.environ.get("GOOGLE_CX")
+    if not key or not cx:
         return None
-
     try:
         r = requests.get(
             "https://www.googleapis.com/customsearch/v1",
             params={
-                "key": GOOGLE_API_KEY,
-                "cx": GOOGLE_CX,
+                "key": key,
+                "cx": cx,
                 "q": f"{clean_title(title)} movie poster",
                 "searchType": "image",
                 "num": 1
             },
             timeout=5
         ).json()
-
         items = r.get("items")
         if items:
             return items[0].get("link")
     except Exception:
         pass
-
     return None
+
 def get_poster(title):
     if title in poster_cache:
         return poster_cache[title]
 
-    # 1️⃣ Try OMDb
     poster = fetch_omdb(title)
     if poster:
         poster_cache[title] = poster
         return poster
 
-    # 2️⃣ Fallback to Google
-    poster = fetch_google_image(title)
+    poster = fetch_google(title)
     if poster:
         poster_cache[title] = poster
         return poster
 
-    # 3️⃣ Placeholder
     poster_cache[title] = "/static/placeholder.jpg"
     return poster_cache[title]
 
-def resolve_title_fuzzy(query, titles, cutoff=0.6):
-    """
-    Returns best matching title using fuzzy matching
-    """
-    matches = difflib.get_close_matches(
-        query,
-        titles,
-        n=1,
-        cutoff=cutoff
-    )
-    return matches[0] if matches else None
-def recommend_like_this(query, n=10, content_type="", language="", platform=""):
-    query = query.lower().strip()
+# ---------- FUZZY MATCH ----------
+def resolve_title_fuzzy(query, titles):
+    match = difflib.get_close_matches(query, titles, n=1, cutoff=0.6)
+    return match[0] if match else None
 
-    # Filter first
+# ---------- RECOMMENDER WITH PAGINATION ----------
+def recommend_like_this(query, start, limit, content_type, language, platform):
+    query = query.lower().strip()
     data = movies.copy()
 
     if content_type:
         data = data[data["type"].str.lower() == content_type.lower()]
-
     if language:
         data = data[data["language"].str.contains(language, case=False)]
-
     if platform:
         data = data[data["platform"] == platform]
 
     if data.empty:
         return []
 
-    # Build local indices
-    local_indices = pd.Series(data.index, index=data["title"])
+    titles = data["title"].tolist()
 
-    title = query
-
-    # Exact match
-    if title not in local_indices:
-        # Fuzzy match fallback
-        title = resolve_title_fuzzy(title, local_indices.index)
-        if not title:
+    if query not in titles:
+        query = resolve_title_fuzzy(query, titles)
+        if not query:
             return []
 
-    idx = local_indices[title]
-
-    # Compute similarity ONLY on filtered data
+    idx = data[data["title"] == query].index[0]
     filtered_matrix = tfidf_matrix[data.index]
-    query_vec = tfidf_matrix[idx]
-    similarity = linear_kernel(query_vec, filtered_matrix).flatten()
 
-    ranked = similarity.argsort()[::-1]
-    rec_idx = [data.index[i] for i in ranked if data.index[i] != idx][:n]
+    scores = linear_kernel(tfidf_matrix[idx], filtered_matrix).flatten()
+    ranked = scores.argsort()[::-1]
 
-    results = movies.loc[rec_idx][
+    all_idx = [data.index[i] for i in ranked if data.index[i] != idx]
+    paged_idx = all_idx[start:start + limit]
+
+    results = movies.loc[paged_idx][
         ["title", "type", "language", "genres", "director", "cast", "platform"]
     ].copy()
 
     results["poster"] = results["title"].apply(get_poster)
     return results.to_dict(orient="records")
-
 
 # ---------- ROUTES ----------
 @app.route("/")
@@ -190,24 +152,18 @@ def home():
 @app.route("/recommend", methods=["POST"])
 def recommend():
     data = request.get_json(force=True)
-    movie = data.get("movie", "")
-    content_type = data.get("type", "")
-    language = data.get("language", "")
-    platform = data.get("platform", "")
-
-    results = recommend_like_this(
-        movie, 10,
-        content_type=content_type,
-        language=language,
-        platform=platform
+    return jsonify(
+        recommend_like_this(
+            data.get("movie", ""),
+            int(data.get("start", 0)),
+            int(data.get("limit", 5)),
+            data.get("type", ""),
+            data.get("language", ""),
+            data.get("platform", "")
+        )
     )
-    return jsonify(results)
 
 # ---------- RUN ----------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
