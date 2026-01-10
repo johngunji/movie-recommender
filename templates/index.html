@@ -64,6 +64,14 @@
             </div>
         </div>
     </div>
+    <div class="text-center mt-4">
+    <button id="showMoreBtn"
+            onclick="loadMore()"
+            class="btn btn-outline-light px-5 py-2 d-none">
+        Show More
+    </button>
+</div>
+
 
     <div id="results" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4 fade-in delay-2">
         <div class="col-12 text-center py-5 text-muted">
@@ -72,6 +80,8 @@
         </div>
     </div>
 </div>
+<div id="results" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4 fade-in delay-2">
+
 
 <div class="modal fade" id="movieModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -95,66 +105,75 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-async function fetchRecommendations() {
+let offset = 0;
+const LIMIT = 10;
+let lastQuery = {};
+
+async function fetchRecommendations(reset = true) {
     const movieInput = document.getElementById("movie");
     const resultsContainer = document.getElementById("results");
     const btnText = document.getElementById("btn-text");
     const btnLoader = document.getElementById("btn-loader");
+    const showMoreBtn = document.getElementById("showMoreBtn");
 
-    // Input Validation
     if (!movieInput.value.trim()) {
         movieInput.classList.add("is-invalid");
         setTimeout(() => movieInput.classList.remove("is-invalid"), 2000);
         return;
     }
 
-    // UI Loading State
+    if (reset) {
+        offset = 0;
+        resultsContainer.innerHTML = "";
+        showMoreBtn.classList.add("d-none");
+    }
+
+    lastQuery = {
+        movie: movieInput.value,
+        type: document.getElementById("type").value,
+        language: document.getElementById("language").value,
+        platform: document.getElementById("platform").value
+    };
+
     btnText.classList.add("d-none");
     btnLoader.classList.remove("d-none");
-    resultsContainer.style.opacity = "0.5";
 
     try {
         const response = await fetch("/recommend", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
-                movie: movieInput.value,
-                type: document.getElementById("type").value,
-                language: document.getElementById("language").value,
-                platform: document.getElementById("platform").value
+                ...lastQuery,
+                start: offset,
+                limit: LIMIT
             })
         });
 
         const data = await response.json();
-        
-        // Clear & Reset UI
-        resultsContainer.innerHTML = "";
-        resultsContainer.style.opacity = "1";
 
         if (!data || data.length === 0) {
-            resultsContainer.innerHTML = `
-                <div class="col-12 text-center py-5">
-                    <div class="text-secondary">
+            if (offset === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="col-12 text-center py-5">
                         <i class="bi bi-emoji-frown display-4 mb-3 d-block"></i>
                         <h5>No matches found</h5>
-                        <p class="small">Try a different movie or clear the filters.</p>
-                    </div>
-                </div>`;
+                        <p class="small text-muted">Try a different movie or filters.</p>
+                    </div>`;
+            }
+            showMoreBtn.classList.add("d-none");
             return;
         }
 
-        // Render Cards with Animation Delay
         data.forEach((m, index) => {
-            // Escape title for safety
             const safeTitle = m.title.replace(/'/g, "&apos;");
-            const delay = index * 50; // Stagger animation
-            
+            const delay = index * 60;
+
             const cardHTML = `
             <div class="col" style="animation: fadeInUp 0.5s ease forwards ${delay}ms; opacity: 0;">
-                <div class="card movie-card h-100" 
+                <div class="card movie-card h-100"
                      onclick="openModal('${safeTitle}', '${m.poster}', '${m.genres}', '${m.platform}', '${m.language}')">
                     <div class="img-wrapper">
-                        <img src="${m.poster}" class="card-img-top" 
+                        <img src="${m.poster}"
                              onerror="this.src='https://via.placeholder.com/300x450/111/555?text=No+Poster'">
                         <div class="overlay">
                             <i class="bi bi-play-circle-fill display-4 text-white"></i>
@@ -163,24 +182,31 @@ async function fetchRecommendations() {
                     <div class="card-body">
                         <div class="movie-genres text-truncate">${m.genres}</div>
                         <div class="movie-title text-truncate">${m.title}</div>
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <span class="badge bg-dark border border-secondary text-secondary">${m.language.toUpperCase().slice(0, 3)}</span>
+                        <div class="d-flex justify-content-between mt-2">
+                            <span class="badge bg-dark border border-secondary">${m.language.toUpperCase()}</span>
                             <span class="small text-accent fw-bold">${m.type === 'tv show' ? 'TV' : 'MOVIE'}</span>
                         </div>
                     </div>
                 </div>
             </div>`;
-            resultsContainer.insertAdjacentHTML('beforeend', cardHTML);
+            resultsContainer.insertAdjacentHTML("beforeend", cardHTML);
         });
 
-    } catch (error) {
-        console.error("Error:", error);
-        resultsContainer.innerHTML = `<p class="text-danger text-center w-100">Something went wrong. Please try again.</p>`;
+        offset += LIMIT;
+        showMoreBtn.classList.remove("d-none");
+
+    } catch (err) {
+        console.error(err);
+        resultsContainer.innerHTML =
+            `<p class="text-danger text-center">Something went wrong.</p>`;
     } finally {
-        // Reset Button State
         btnText.classList.remove("d-none");
         btnLoader.classList.add("d-none");
     }
+}
+
+function loadMore() {
+    fetchRecommendations(false);
 }
 
 function openModal(title, poster, genres, platform, lang) {
@@ -189,15 +215,11 @@ function openModal(title, poster, genres, platform, lang) {
     document.getElementById("modal-genres").innerText = genres;
     document.getElementById("modal-platform").innerText = platform || "N/A";
     document.getElementById("modal-lang").innerText = lang.toUpperCase();
-    
-    // Fallback for modal image error
-    document.getElementById("modal-img").onerror = function() {
-        this.src = 'https://via.placeholder.com/300x450/111/555?text=No+Poster';
-    };
 
     new bootstrap.Modal(document.getElementById("movieModal")).show();
 }
 </script>
+
 
 <style>
 /* Animation Keyframes inside HTML for simplicity */
@@ -208,3 +230,4 @@ function openModal(title, poster, genres, platform, lang) {
 </style>
 </body>
 </html>
+
