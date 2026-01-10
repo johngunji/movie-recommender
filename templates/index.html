@@ -1,154 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Recommender | AI Search</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movie Recommender</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
-
 <div class="container py-5">
-    <header class="text-center mb-5">
-        <h1 class="display-3 gradient-text">🎬 Movie Recommender</h1>
-        <p class="lead text-secondary">Find your next binge-watch using AI recommendations.</p>
-    </header>
+<h1 class="text-center gradient-text mb-4">🎬 Movie Recommender</h1>
 
-    <div class="search-card p-4 mb-5">
-        <div class="row g-3">
-            <div class="col-lg-4 col-md-12">
-                <label class="small text-secondary mb-1">Search Movie</label>
-                <input id="movie" class="form-control custom-input" placeholder="Enter a movie you liked...">
-            </div>
-            <div class="col-lg-2 col-md-4">
-                <label class="small text-secondary mb-1">Content Type</label>
-                <select id="type" class="form-select custom-input">
-                    <option value="">All</option>
-                    <option value="movie">Movies</option>
-                    <option value="tv show">TV Shows</option>
-                </select>
-            </div>
-            <div class="col-lg-2 col-md-4">
-                <label class="small text-secondary mb-1">Language</label>
-                <select id="language" class="form-select custom-input">
-                    <option value="">All</option>
-                    <option value="english">English</option>
-                    <option value="hindi">Hindi</option>
-                    <option value="telugu">Telugu</option>
-                </select>
-            </div>
-            <div class="col-lg-2 col-md-4">
-                <label class="small text-secondary mb-1">Streaming On</label>
-                <select id="platform" class="form-select custom-input">
-                    <option value="">All Platforms</option>
-                    <option value="Netflix / Disney">Netflix / Disney</option>
-                    <option value="Prime Video">Prime Video</option>
-                </select>
-            </div>
-            <div class="col-lg-2 col-md-12 d-flex align-items-end">
-                <button onclick="go()" class="btn btn-recommend w-100 py-2 mt-3 mt-lg-0 shadow">Recommend</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="results" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4">
-        </div>
+<div class="search-card p-4 mb-5">
+<div class="row g-3">
+<input id="movie" class="form-control" placeholder="Enter a movie you liked">
+<select id="type" class="form-select">
+<option value="">All</option>
+<option value="movie">Movies</option>
+<option value="tv show">TV Shows</option>
+</select>
+<select id="language" class="form-select">
+<option value="">All</option>
+<option value="english">English</option>
+<option value="hindi">Hindi</option>
+<option value="telugu">Telugu</option>
+</select>
+<select id="platform" class="form-select">
+<option value="">All Platforms</option>
+<option value="Netflix / Disney">Netflix / Disney</option>
+<option value="Prime Video">Prime Video</option>
+</select>
+<button onclick="go()" class="btn btn-danger">Recommend</button>
+</div>
 </div>
 
-<div class="modal fade" id="movieModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark border-secondary shadow-lg">
-            <div class="modal-header border-0">
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div id="modal-body" class="modal-body text-center pt-0">
-                </div>
-        </div>
-    </div>
+<div id="results" class="row row-cols-1 row-cols-md-4 g-4"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="movieModal">
+<div class="modal-dialog modal-dialog-centered">
+<div class="modal-content bg-dark text-white p-4">
+<div id="modal-body"></div>
+</div>
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    function go() {
-        const resultsDiv = document.getElementById("results");
-        const movieName = document.getElementById("movie").value.trim();
+function go() {
+const res = document.getElementById("results");
+res.innerHTML = "<p class='text-center'>Loading...</p>";
 
-        if(!movieName) {
-            alert("Please enter a movie name to get started!");
-            return;
-        }
+fetch("/recommend", {
+method: "POST",
+headers: {"Content-Type": "application/json"},
+body: JSON.stringify({
+movie: movie.value,
+type: type.value,
+language: language.value,
+platform: platform.value
+})
+})
+.then(r => r.json())
+.then(data => {
+res.innerHTML = "";
+if (!data.length) {
+res.innerHTML = "<p class='text-center'>No results</p>";
+return;
+}
+data.forEach(m => {
+res.innerHTML += `
+<div class="col">
+<div class="card" onclick="showDetails(this)"
+data-title="${m.title}"
+data-poster="${m.poster}"
+data-genres="${m.genres}"
+data-platform="${m.platform}">
+<img src="${m.poster}" onerror="this.src='/static/placeholder.jpg'">
+<div class="card-body">
+<b>${m.title}</b>
+<p>${m.genres}</p>
+</div>
+</div>
+</div>`;
+});
+});
+}
 
-        // Show Loading State
-        resultsDiv.innerHTML = `
-            <div class="loader w-100 text-center">
-                <div class="spinner-border" role="status"></div>
-                <p class="mt-3 text-secondary fw-light">Curating your personalized list...</p>
-            </div>`;
-
-        fetch("/recommend", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                movie: movieName,
-                type: document.getElementById("type").value,
-                language: document.getElementById("language").value,
-                platform: document.getElementById("platform").value
-            })
-        })
-        .then(r => r.json())
-        .then(data => {
-            resultsDiv.innerHTML = "";
-            if (!data || data.length === 0) {
-                resultsDiv.innerHTML = `
-                    <div class='text-center w-100 py-5'>
-                        <p class='text-secondary'>No matches found. Try broadening your search!</p>
-                    </div>`;
-                return;
-            }
-
-            let html = "";
-            data.forEach(m => {
-                html += `
-                <div class="col">
-                    <div class="card movie-card" onclick="showDetails('${m.title.replace(/'/g, "\\'")}', '${m.poster}', '${m.genres}', '${m.platform}')">
-                        <img src="${m.poster}" class="card-img-top" onerror="this.src='https://via.placeholder.com/300x450?text=No+Poster'">
-                        <div class="card-body">
-                            <div class="movie-genres">${m.genres}</div>
-                            <div class="movie-title">${m.title}</div>
-                            <div class="movie-meta">${m.language.toUpperCase()} • ${m.type.toUpperCase()}</div>
-                        </div>
-                    </div>
-                </div>`;
-            });
-            resultsDiv.innerHTML = html;
-        })
-        .catch(err => {
-            resultsDiv.innerHTML = "<div class='text-center w-100'><p class='text-danger'>Something went wrong. Please check your connection.</p></div>";
-            console.error("Fetch error:", err);
-        });
-    }
-
-    // Opens the details modal
-    function showDetails(title, poster, genres, platform) {
-        const modalBody = document.getElementById("modal-body");
-        modalBody.innerHTML = `
-            <img src="${poster}" class="img-fluid rounded mb-4 shadow-lg" style="max-height: 400px" onerror="this.src='https://via.placeholder.com/300x450?text=No+Poster'">
-            <h2 class="gradient-text mb-2">${title}</h2>
-            <p class="text-secondary mb-3">${genres}</p>
-            <div class="d-flex justify-content-center gap-2 mb-4">
-                <span class="badge rounded-pill bg-danger px-3 py-2">${platform}</span>
-            </div>
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Close</button>
-        `;
-        const myModal = new bootstrap.Modal(document.getElementById('movieModal'));
-        myModal.show();
-    }
+function showDetails(card) {
+modalBody.innerHTML = `
+<img src="${card.dataset.poster}" class="img-fluid mb-3">
+<h3>${card.dataset.title}</h3>
+<p>${card.dataset.genres}</p>
+<span class="badge bg-danger">${card.dataset.platform}</span>
+`;
+new bootstrap.Modal(movieModal).show();
+}
 </script>
-
 </body>
 </html>
