@@ -1,4 +1,6 @@
-/* --- Variables & Core --- */
+/* ===============================
+   Variables & Core Theme
+   =============================== */
 :root {
     --primary-gradient: linear-gradient(45deg, #ff416c, #ff4b2b);
     --glass-bg: rgba(255, 255, 255, 0.05);
@@ -14,7 +16,9 @@ body {
     min-height: 100vh;
 }
 
-/* --- Typography --- */
+/* ===============================
+   Typography
+   =============================== */
 .gradient-text {
     background: var(--primary-gradient);
     -webkit-background-clip: text;
@@ -22,22 +26,32 @@ body {
     font-weight: 800;
 }
 
-/* --- Search Section (Glassmorphism) --- */
+.lead {
+    color: var(--text-muted);
+}
+
+/* ===============================
+   Search Section (Glassmorphism)
+   =============================== */
 .search-card {
     background: var(--glass-bg);
     backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px); /* Safari support */
+    -webkit-backdrop-filter: blur(15px);
     border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
 }
 
 .custom-input {
     background: rgba(255, 255, 255, 0.08) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: white !important;
+    color: #ffffff !important;
     border-radius: 10px;
     transition: all 0.3s ease;
+}
+
+.custom-input::placeholder {
+    color: #aaa;
 }
 
 .custom-input:focus {
@@ -46,6 +60,9 @@ body {
     box-shadow: 0 0 15px rgba(255, 65, 108, 0.3) !important;
 }
 
+/* ===============================
+   Recommend Button
+   =============================== */
 .btn-recommend {
     background: var(--primary-gradient);
     border: none;
@@ -58,18 +75,20 @@ body {
 .btn-recommend:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4);
-    color: white;
+    color: #ffffff;
 }
 
-/* --- Movie Cards --- */
+/* ===============================
+   Movie Cards
+   =============================== */
 .movie-card {
     background: var(--card-bg);
     border: none;
     border-radius: 15px;
     overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     cursor: pointer;
     height: 100%;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .movie-card:hover {
@@ -80,6 +99,7 @@ body {
 .movie-card img {
     height: 320px;
     object-fit: cover;
+    width: 100%;
     border-bottom: 3px solid var(--accent-color);
 }
 
@@ -110,7 +130,9 @@ body {
     margin-top: 8px;
 }
 
-/* --- Loading State --- */
+/* ===============================
+   Loading State
+   =============================== */
 .loader {
     grid-column: 1 / -1;
     padding: 100px 0;
@@ -121,4 +143,24 @@ body {
     width: 3rem;
     height: 3rem;
     color: var(--accent-color);
+}
+
+/* ===============================
+   Modal Styling
+   =============================== */
+.modal-content {
+    border-radius: 20px;
+    background-color: #111;
+}
+
+.modal-body img {
+    border-radius: 12px;
+}
+
+.modal-body h2 {
+    font-weight: 800;
+}
+
+.badge {
+    font-size: 0.8rem;
 }
