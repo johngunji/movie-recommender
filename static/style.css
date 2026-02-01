@@ -83,6 +83,19 @@ select option {
 .like-btn i.bi-heart-fill {
     color: #ff4b5c;
 }
+.bi-heart {
+    cursor: pointer;
+    color: #aaa;
+    font-size: 1.3rem;
+}
+
+.bi-heart-fill {
+    cursor: pointer;
+    color: #ff4b5c;
+    font-size: 1.3rem;
+}
+
+
 
 
 
