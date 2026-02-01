@@ -5,18 +5,17 @@
     --text-main: #ffffff;
     --text-muted: #a0a0a0;
     --accent-color: #ff416c;
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255,255,255,0.08);
+    --glass-bg: rgba(255,255,255,0.03);
 }
 
 body {
     font-family: 'Inter', sans-serif;
-    background-color: var(--bg-dark);
+    background: var(--bg-dark);
     color: var(--text-main);
     min-height: 100vh;
 }
 
-/* Typography */
 .gradient-text {
     background: var(--primary-gradient);
     -webkit-background-clip: text;
@@ -27,17 +26,15 @@ body {
     font-size: 3rem;
 }
 
-/* Glass Card */
 .search-card {
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
     border-radius: 24px;
-    box-shadow: 0 8px 32px rgba(0,0,0,.4);
 }
 
 .custom-input {
-    background: rgba(255,255,255,.05);
+    background: rgba(255,255,255,0.05);
     border: 1px solid var(--glass-border);
     color: white;
     border-radius: 12px;
@@ -48,7 +45,6 @@ body {
     box-shadow: 0 0 0 4px rgba(255,65,108,.15);
 }
 
-/* Button */
 .btn-recommend {
     background: var(--primary-gradient);
     border: none;
@@ -56,13 +52,11 @@ body {
     border-radius: 12px;
 }
 
-/* Movie Cards */
 .movie-card {
     background: var(--bg-card);
     border: 1px solid var(--glass-border);
     border-radius: 16px;
     overflow: hidden;
-    cursor: pointer;
     transition: .3s;
 }
 
@@ -92,10 +86,4 @@ body {
     font-size: .75rem;
     color: var(--text-muted);
     text-transform: uppercase;
-}
-
-/* Modal */
-.glass-modal {
-    background: #1a1a1a;
-    border-radius: 24px;
 }
