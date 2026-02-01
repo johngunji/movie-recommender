@@ -1,145 +1,121 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <title>Movie Recommender</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movie Recommender</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
 
+<body>
 <div class="container py-5">
 
-    <header class="text-center mb-5">
-        <div class="icon-brand">🎬</div>
-        <h1 class="gradient-text">Movie Recommender</h1>
-    </header>
+<header class="text-center mb-5">
+    <h1 class="gradient-text fw-bold">🎬 Movie Recommender</h1>
+    <p class="text-muted">AI powered suggestions</p>
+</header>
 
-    <div class="search-card p-4 mb-4">
-        <div class="row g-3">
-            <div class="col-md-5">
-                <input id="movie" class="form-control custom-input" placeholder="Movie name">
-            </div>
-
-            <div class="col-md-3">
-                <select id="type" class="form-select custom-input">
-                    <option value="">All</option>
-                    <option value="movie">Movie</option>
-                    <option value="tv show">TV Show</option>
-                </select>
-            </div>
-
-            <div class="col-md-3">
-                <select id="platform" class="form-select custom-input">
-                    <option value="">Any Platform</option>
-                    <option value="Netflix / Disney">Netflix / Disney</option>
-                    <option value="Prime Video">Prime Video</option>
-                </select>
-            </div>
-
-            <div class="col-md-1">
-                <button onclick="fetchRecommendations(true)"
-                        class="btn btn-recommend w-100">Go</button>
-            </div>
+<div class="search-card p-4 mb-5">
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <input id="movie" class="form-control custom-input" placeholder="Enter movie">
+        </div>
+        <div class="col-lg-3">
+            <select id="type" class="form-select custom-input">
+                <option value="">All</option>
+                <option value="movie">Movie</option>
+                <option value="tv show">TV Show</option>
+            </select>
+        </div>
+        <div class="col-lg-3">
+            <select id="platform" class="form-select custom-input">
+                <option value="">Any Platform</option>
+                <option value="Netflix / Disney">Netflix / Disney</option>
+                <option value="Prime Video">Prime Video</option>
+            </select>
+        </div>
+        <div class="col-lg-2">
+            <button onclick="search(true)" class="btn btn-recommend w-100">Search</button>
         </div>
     </div>
+</div>
 
-    <div id="results" class="row g-4"></div>
+<div id="results" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4"></div>
 
-    <div class="text-center mt-4">
-        <button id="showMoreBtn"
-                class="btn btn-outline-light d-none"
-                onclick="loadMore()">Show More</button>
-    </div>
+<div class="text-center mt-5">
+    <button id="showMore" onclick="search(false)" class="btn btn-outline-light d-none">
+        Show More
+    </button>
+</div>
+
 </div>
 
 <script>
 let offset = 0;
 const LIMIT = 10;
+let saved = JSON.parse(localStorage.getItem("watchlist") || "[]");
 
-function saveRecommendation(movie) {
-    const saved = JSON.parse(localStorage.getItem("savedMovies")) || [];
-    if (!saved.some(m => m.title === movie.title)) {
-        saved.push(movie);
-        localStorage.setItem("savedMovies", JSON.stringify(saved));
-    }
+function toggleSave(title){
+    saved.includes(title)
+        ? saved = saved.filter(t => t !== title)
+        : saved.push(title);
+    localStorage.setItem("watchlist", JSON.stringify(saved));
+    document.querySelector(`[data-title="${title}"] i`)
+        .classList.toggle("bi-heart-fill");
 }
 
-async function fetchRecommendations(reset = true) {
-    const results = document.getElementById("results");
-
-    if (reset) {
+async function search(reset){
+    if(reset){
         offset = 0;
         results.innerHTML = "";
+        showMore.classList.add("d-none");
     }
-
-    const payload = {
-        movie: document.getElementById("movie").value,
-        type: document.getElementById("type").value,
-        platform: document.getElementById("platform").value,
-        start: offset,
-        limit: LIMIT
-    };
 
     const res = await fetch("/recommend", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(payload)
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+            movie: movie.value,
+            type: type.value,
+            platform: platform.value,
+            start: offset,
+            limit: LIMIT
+        })
     });
 
     const data = await res.json();
+    if(!data.length) return;
 
-    data.forEach(m => {
-        saveRecommendation(m);
+    data.forEach(m=>{
+        const liked = saved.includes(m.title) ? "bi-heart-fill" : "bi-heart";
         results.insertAdjacentHTML("beforeend", `
-            <div class="col-md-3">
-                <div class="movie-card">
-                    <div class="img-wrapper">
-                        <img src="${m.poster}">
-                    </div>
-                    <div class="card-body">
-                        <div class="movie-genres">${m.genres}</div>
-                        <div class="movie-title">${m.title}</div>
+        <div class="col">
+            <div class="card movie-card">
+                <img src="${m.poster}" class="card-img-top"
+                     onerror="this.src='/static/placeholder.jpg'">
+                <div class="card-body">
+                    <div class="movie-title">${m.title}</div>
+                    <div class="movie-genres">${m.genres}</div>
+                    <div class="d-flex justify-content-between">
+                        <span class="badge bg-dark">${m.platform}</span>
+                        <span onclick="toggleSave('${m.title}')"
+                              data-title="${m.title}">
+                            <i class="bi ${liked}"></i>
+                        </span>
                     </div>
                 </div>
             </div>
+        </div>
         `);
     });
 
     offset += LIMIT;
-    document.getElementById("showMoreBtn")
-        .classList.toggle("d-none", data.length < LIMIT);
+    if(data.length === LIMIT) showMore.classList.remove("d-none");
 }
-
-function loadMore() {
-    fetchRecommendations(false);
-}
-
-window.onload = () => {
-    const saved = JSON.parse(localStorage.getItem("savedMovies")) || [];
-    const results = document.getElementById("results");
-
-    if (!saved.length) return;
-
-    results.innerHTML = "";
-    saved.forEach(m => {
-        results.insertAdjacentHTML("beforeend", `
-            <div class="col-md-3">
-                <div class="movie-card">
-                    <div class="img-wrapper">
-                        <img src="${m.poster}">
-                    </div>
-                    <div class="card-body">
-                        <div class="movie-genres">${m.genres}</div>
-                        <div class="movie-title">${m.title}</div>
-                    </div>
-                </div>
-            </div>
-        `);
-    });
-};
 </script>
 
 </body>
