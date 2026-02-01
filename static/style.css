@@ -63,3 +63,11 @@ body {
     cursor: pointer;
     color: #ff416c;
 }
+
+select,
+select option {
+    background-color: #161616 !important;
+    color: #ffffff !important;
+}
+
+
