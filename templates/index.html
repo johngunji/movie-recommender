@@ -40,7 +40,8 @@
             </div>
 
             <div class="col-md-1">
-                <button onclick="fetchRecommendations(true)" class="btn btn-recommend w-100">Go</button>
+                <button onclick="fetchRecommendations(true)"
+                        class="btn btn-recommend w-100">Go</button>
             </div>
         </div>
     </div>
@@ -48,25 +49,25 @@
     <div id="results" class="row g-4"></div>
 
     <div class="text-center mt-4">
-        <button id="showMoreBtn" class="btn btn-outline-light d-none" onclick="loadMore()">Show More</button>
+        <button id="showMoreBtn"
+                class="btn btn-outline-light d-none"
+                onclick="loadMore()">Show More</button>
     </div>
-
 </div>
 
 <script>
 let offset = 0;
 const LIMIT = 10;
-let lastQuery = {};
 
 function saveRecommendation(movie) {
-    let saved = JSON.parse(localStorage.getItem("savedMovies")) || [];
+    const saved = JSON.parse(localStorage.getItem("savedMovies")) || [];
     if (!saved.some(m => m.title === movie.title)) {
         saved.push(movie);
         localStorage.setItem("savedMovies", JSON.stringify(saved));
     }
 }
 
-async function fetchRecommendations(reset=true) {
+async function fetchRecommendations(reset = true) {
     const results = document.getElementById("results");
 
     if (reset) {
@@ -74,16 +75,18 @@ async function fetchRecommendations(reset=true) {
         results.innerHTML = "";
     }
 
-    lastQuery = {
-        movie: movie.value,
-        type: type.value,
-        platform: platform.value
+    const payload = {
+        movie: document.getElementById("movie").value,
+        type: document.getElementById("type").value,
+        platform: document.getElementById("platform").value,
+        start: offset,
+        limit: LIMIT
     };
 
     const res = await fetch("/recommend", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({...lastQuery, start: offset, limit: LIMIT})
+        body: JSON.stringify(payload)
     });
 
     const data = await res.json();
@@ -91,35 +94,6 @@ async function fetchRecommendations(reset=true) {
     data.forEach(m => {
         saveRecommendation(m);
         results.insertAdjacentHTML("beforeend", `
-        <div class="col-md-3">
-            <div class="movie-card">
-                <div class="img-wrapper">
-                    <img src="${m.poster}">
-                </div>
-                <div class="card-body">
-                    <div class="movie-genres">${m.genres}</div>
-                    <div class="movie-title">${m.title}</div>
-                </div>
-            </div>
-        </div>`);
-    });
-
-    offset += LIMIT;
-    document.getElementById("showMoreBtn").classList.toggle("d-none", data.length < LIMIT);
-}
-
-function loadMore() {
-    fetchRecommendations(false);
-}
-
-window.onload = () => {
-    const saved = JSON.parse(localStorage.getItem("savedMovies")) || [];
-    const results = document.getElementById("results");
-
-    if (saved.length) {
-        results.innerHTML = "";
-        saved.forEach(m => {
-            results.insertAdjacentHTML("beforeend", `
             <div class="col-md-3">
                 <div class="movie-card">
                     <div class="img-wrapper">
@@ -130,9 +104,41 @@ window.onload = () => {
                         <div class="movie-title">${m.title}</div>
                     </div>
                 </div>
-            </div>`);
-        });
-    }
+            </div>
+        `);
+    });
+
+    offset += LIMIT;
+    document.getElementById("showMoreBtn")
+        .classList.toggle("d-none", data.length < LIMIT);
+}
+
+function loadMore() {
+    fetchRecommendations(false);
+}
+
+window.onload = () => {
+    const saved = JSON.parse(localStorage.getItem("savedMovies")) || [];
+    const results = document.getElementById("results");
+
+    if (!saved.length) return;
+
+    results.innerHTML = "";
+    saved.forEach(m => {
+        results.insertAdjacentHTML("beforeend", `
+            <div class="col-md-3">
+                <div class="movie-card">
+                    <div class="img-wrapper">
+                        <img src="${m.poster}">
+                    </div>
+                    <div class="card-body">
+                        <div class="movie-genres">${m.genres}</div>
+                        <div class="movie-title">${m.title}</div>
+                    </div>
+                </div>
+            </div>
+        `);
+    });
 };
 </script>
 
