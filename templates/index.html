@@ -8,6 +8,7 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
@@ -20,9 +21,9 @@
 </header>
 
 <div class="search-card p-4 mb-5">
-    <div class="row g-3">
+    <div class="row g-3 align-items-end">
         <div class="col-lg-4">
-            <input id="movie" class="form-control custom-input" placeholder="Enter movie">
+            <input id="movie" class="form-control custom-input" placeholder="Enter a movie you liked">
         </div>
         <div class="col-lg-3">
             <select id="type" class="form-select custom-input">
@@ -38,8 +39,9 @@
                 <option value="Prime Video">Prime Video</option>
             </select>
         </div>
-        <div class="col-lg-2">
-            <button onclick="search(true)" class="btn btn-recommend w-100">Search</button>
+        <div class="col-lg-2 d-grid gap-2">
+            <button onclick="search(true)" class="btn btn-recommend">Search</button>
+            <button onclick="showFavourites()" class="btn btn-outline-light">❤️ Favourites</button>
         </div>
     </div>
 </div>
@@ -55,68 +57,90 @@
 </div>
 
 <script>
+const results = document.getElementById("results");
+const showMore = document.getElementById("showMore");
+const movieInput = document.getElementById("movie");
+const typeSelect = document.getElementById("type");
+const platformSelect = document.getElementById("platform");
+
 let offset = 0;
 const LIMIT = 10;
+
+// Load favourites
 let saved = JSON.parse(localStorage.getItem("watchlist") || "[]");
 
-function isSaved(title) {
-    return saved.includes(title);
-}
+/* =============================
+   LIKE / UNLIKE (FIXED)
+============================= */
+function toggleSave(title){
+    const index = saved.indexOf(title);
 
-function toggleSave(title, icon) {
-    if (isSaved(title)) {
-        saved = saved.filter(t => t !== title);
-        icon.classList.remove("bi-heart-fill");
-        icon.classList.add("bi-heart");
+    if (index !== -1) {
+        saved.splice(index, 1);
     } else {
         saved.push(title);
-        icon.classList.remove("bi-heart");
-        icon.classList.add("bi-heart-fill");
     }
+
     localStorage.setItem("watchlist", JSON.stringify(saved));
+
+    const icon = document.querySelector(`[data-title="${CSS.escape(title)}"] i`);
+    if (!icon) return;
+
+    icon.classList.toggle("bi-heart-fill");
+    icon.classList.toggle("bi-heart");
 }
 
-async function search(reset) {
+/* =============================
+   SEARCH + PAGINATION
+============================= */
+async function search(reset){
     if (reset) {
         offset = 0;
         results.innerHTML = "";
         showMore.classList.add("d-none");
+
+        if (!movieInput.value.trim()) {
+            alert("Please enter a movie name");
+            return;
+        }
     }
 
     const res = await fetch("/recommend", {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({
-            movie: movie.value,
-            type: type.value,
-            platform: platform.value,
+            movie: movieInput.value,
+            type: typeSelect.value,
+            platform: platformSelect.value,
             start: offset,
             limit: LIMIT
         })
     });
 
     const data = await res.json();
-    if (!data.length) return;
+    if (!data.length && offset === 0) {
+        results.innerHTML = `<p class="text-center text-muted">No results found</p>`;
+        return;
+    }
 
     data.forEach(m => {
-        const likedClass = isSaved(m.title) ? "bi-heart-fill" : "bi-heart";
-        const safeTitle = m.title.replace(/"/g, "&quot;");
+        const liked = saved.includes(m.title) ? "bi-heart-fill" : "bi-heart";
 
         results.insertAdjacentHTML("beforeend", `
         <div class="col">
-            <div class="card movie-card position-relative">
+            <div class="card movie-card">
                 <img src="${m.poster}" class="card-img-top"
                      onerror="this.src='/static/placeholder.jpg'">
-
-                <button class="like-btn"
-                        onclick="event.stopPropagation(); toggleSave('${safeTitle}', this.querySelector('i'))">
-                    <i class="bi ${likedClass}"></i>
-                </button>
-
                 <div class="card-body">
                     <div class="movie-title">${m.title}</div>
                     <div class="movie-genres">${m.genres}</div>
-                    <span class="badge bg-dark">${m.platform}</span>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <span class="badge bg-dark">${m.platform}</span>
+                        <span onclick="toggleSave('${m.title}')"
+                              data-title="${m.title}">
+                            <i class="bi ${liked}"></i>
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -126,9 +150,42 @@ async function search(reset) {
     offset += LIMIT;
     if (data.length === LIMIT) showMore.classList.remove("d-none");
 }
-</script>
 
+/* =============================
+   FAVOURITES VIEW
+============================= */
+function showFavourites(){
+    results.innerHTML = "";
+    showMore.classList.add("d-none");
+
+    if (!saved.length) {
+        results.innerHTML = `
+            <p class="text-center text-muted py-5">
+                No favourites yet ❤️
+            </p>`;
+        return;
+    }
+
+    saved.forEach(title => {
+        results.insertAdjacentHTML("beforeend", `
+        <div class="col">
+            <div class="card movie-card">
+                <img src="/static/placeholder.jpg" class="card-img-top">
+                <div class="card-body">
+                    <div class="movie-title">${title}</div>
+                    <div class="d-flex justify-content-end">
+                        <span onclick="toggleSave('${title}')"
+                              data-title="${title}">
+                            <i class="bi bi-heart-fill"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `);
+    });
+}
+</script>
 
 </body>
 </html>
-
