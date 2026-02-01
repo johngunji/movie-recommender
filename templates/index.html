@@ -59,17 +59,25 @@ let offset = 0;
 const LIMIT = 10;
 let saved = JSON.parse(localStorage.getItem("watchlist") || "[]");
 
-function toggleSave(title){
-    saved.includes(title)
-        ? saved = saved.filter(t => t !== title)
-        : saved.push(title);
-    localStorage.setItem("watchlist", JSON.stringify(saved));
-    document.querySelector(`[data-title="${title}"] i`)
-        .classList.toggle("bi-heart-fill");
+function isSaved(title) {
+    return saved.includes(title);
 }
 
-async function search(reset){
-    if(reset){
+function toggleSave(title, icon) {
+    if (isSaved(title)) {
+        saved = saved.filter(t => t !== title);
+        icon.classList.remove("bi-heart-fill");
+        icon.classList.add("bi-heart");
+    } else {
+        saved.push(title);
+        icon.classList.remove("bi-heart");
+        icon.classList.add("bi-heart-fill");
+    }
+    localStorage.setItem("watchlist", JSON.stringify(saved));
+}
+
+async function search(reset) {
+    if (reset) {
         offset = 0;
         results.innerHTML = "";
         showMore.classList.add("d-none");
@@ -88,25 +96,27 @@ async function search(reset){
     });
 
     const data = await res.json();
-    if(!data.length) return;
+    if (!data.length) return;
 
-    data.forEach(m=>{
-        const liked = saved.includes(m.title) ? "bi-heart-fill" : "bi-heart";
+    data.forEach(m => {
+        const likedClass = isSaved(m.title) ? "bi-heart-fill" : "bi-heart";
+        const safeTitle = m.title.replace(/"/g, "&quot;");
+
         results.insertAdjacentHTML("beforeend", `
         <div class="col">
-            <div class="card movie-card">
+            <div class="card movie-card position-relative">
                 <img src="${m.poster}" class="card-img-top"
                      onerror="this.src='/static/placeholder.jpg'">
+
+                <button class="like-btn"
+                        onclick="event.stopPropagation(); toggleSave('${safeTitle}', this.querySelector('i'))">
+                    <i class="bi ${likedClass}"></i>
+                </button>
+
                 <div class="card-body">
                     <div class="movie-title">${m.title}</div>
                     <div class="movie-genres">${m.genres}</div>
-                    <div class="d-flex justify-content-between">
-                        <span class="badge bg-dark">${m.platform}</span>
-                        <span onclick="toggleSave('${m.title}')"
-                              data-title="${m.title}">
-                            <i class="bi ${liked}"></i>
-                        </span>
-                    </div>
+                    <span class="badge bg-dark">${m.platform}</span>
                 </div>
             </div>
         </div>
@@ -114,9 +124,11 @@ async function search(reset){
     });
 
     offset += LIMIT;
-    if(data.length === LIMIT) showMore.classList.remove("d-none");
+    if (data.length === LIMIT) showMore.classList.remove("d-none");
 }
 </script>
 
+
 </body>
 </html>
+
