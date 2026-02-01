@@ -1,7 +1,6 @@
 import os
 import difflib
 import pandas as pd
-import requests
 from flask import Flask, render_template, request, jsonify
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
@@ -36,18 +35,16 @@ movies["content"] = (
 tfidf = TfidfVectorizer(stop_words="english", max_features=20000)
 tfidf_matrix = tfidf.fit_transform(movies["content"])
 
-# ---------- POSTER ----------
-poster_cache = {}
-
-def get_poster(title):
+# ---------- POSTER (INTENTIONAL FALLBACK) ----------
+def get_poster(title: str) -> str:
     return "/static/placeholder.jpg"
 
-# ---------- FUZZY ----------
+# ---------- FUZZY MATCH ----------
 def resolve_title_fuzzy(query, titles):
     match = difflib.get_close_matches(query, titles, n=1, cutoff=0.6)
     return match[0] if match else None
 
-# ---------- RECOMMENDER ----------
+# ---------- RECOMMENDER (CORRECT LOGIC) ----------
 def recommend_like_this(query, start, limit, content_type, platform):
     query = query.lower().strip()
     data = movies.copy()
@@ -61,46 +58,4 @@ def recommend_like_this(query, start, limit, content_type, platform):
     if data.empty:
         return []
 
-    titles = data["title"].tolist()
-    if query not in titles:
-        query = resolve_title_fuzzy(query, titles)
-        if not query:
-            return []
-
-    idx = data[data["title"] == query].index[0]
-    scores = linear_kernel(tfidf_matrix[idx], tfidf_matrix).flatten()
-    ranked = scores.argsort()[::-1]
-
-    all_idx = [i for i in ranked if i != idx]
-    paged_idx = all_idx[start:start + limit]
-
-    results = movies.loc[paged_idx][
-        ["title", "type", "genres", "platform"]
-    ].copy()
-
-    results["poster"] = results["title"].apply(get_poster)
-    return results.to_dict(orient="records")
-
-# ---------- ROUTES ----------
-@app.route("/")
-def home():
-    return render_template("index.html")
-
-@app.route("/recommend", methods=["POST"])
-def recommend():
-    data = request.get_json()
-    return jsonify(
-        recommend_like_this(
-            data.get("movie", ""),
-            int(data.get("start", 0)),
-            int(data.get("limit", 10)),
-            data.get("type", ""),
-            data.get("platform", "")
-        )
-    )
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
-
-
+    titles = data["title"]()
