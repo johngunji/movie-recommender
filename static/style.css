@@ -69,5 +69,21 @@ select option {
     background-color: #161616 !important;
     color: #ffffff !important;
 }
+.like-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.4rem;
+    color: #aaa;
+}
+
+.like-btn i.bi-heart-fill {
+    color: #ff4b5c;
+}
+
+
 
 
