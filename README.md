@@ -145,6 +145,9 @@ export GOOGLE_CX=your_custom_search_cx
 
 
 
+
+
+
 ▶️ Run Locally
 pip install -r requirements.txt
 python app.py
