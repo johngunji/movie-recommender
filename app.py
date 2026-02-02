@@ -23,13 +23,15 @@ movies = movies.fillna("")
 movies["title"] = movies["title"].str.lower().str.strip()
 movies.drop_duplicates(subset="title", inplace=True)
 movies.reset_index(drop=True, inplace=True)
+movies["genres"] = movies["genres"].str.replace("|", " ")
+
 
 # ---------- CONTENT ----------
 movies["content"] = (
-    movies["genres"] + " " +
-    movies["cast"] + " " +
-    movies["director"] + " " +
-    movies["description"]
+    movies["genres"] *10+ " " +
+    movies["cast"]*8 + " " +
+    movies["director"]*5 + " " +
+    movies["description"]*6
 )
 
 # ---------- TF-IDF ----------
@@ -152,3 +154,4 @@ def recommend_api():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
