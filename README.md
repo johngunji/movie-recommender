@@ -148,7 +148,7 @@ export GOOGLE_CX=your_custom_search_cx
 
 
 
-▶️ Run Locally
+## ▶️ Run Locally
 pip install -r requirements.txt
 python app.py
 
@@ -157,7 +157,7 @@ Open in browser:
 
 http://127.0.0.1:5000
 
-🌐 Deployment
+## 🌐 Deployment
 
 Deployed on Render
 
@@ -167,7 +167,7 @@ Automatically sleeps on inactivity (free tier behavior)
 
 Secrets managed using platform environment variables
 
-🧩 Future Improvements
+## 🧩 Future Improvements
 
 Recommendation evaluation metrics
 
@@ -179,7 +179,7 @@ Weighted similarity tuning via validation
 
 Performance optimizations for large datasets
 
-👨‍💻 Author
+## 👨‍💻 Author
 
 Gunji John
 B.Tech Computer Science & Engineering
@@ -187,6 +187,6 @@ IIT (ISM) Dhanbad
 
 GitHub: https://github.com/johngunji
 
-📜 License
+## 📜 License
 
 This project is intended for learning and portfolio purposes.
