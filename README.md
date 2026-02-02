@@ -137,7 +137,9 @@ This design prevents broken UI due to API limits or failures.
 Set the following environment variables before running:
 
 export OMDB_API_KEY=your_omdb_api_key
+
 export GOOGLE_API_KEY=your_google_api_key
+
 export GOOGLE_CX=your_custom_search_cx
 
 
