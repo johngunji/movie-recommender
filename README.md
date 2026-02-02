@@ -1,124 +1,187 @@
-🎬 Movie Recommendation System (ML + Web)
+# 🎬 Movie & TV Show Recommendation System (ML-Based)
 
-A content-based movie recommender system built using Machine Learning (TF-IDF) and deployed as a live web application.
+A machine learning–based content recommendation web application built with Python, Flask, and scikit-learn.  
+The system recommends similar movies or TV shows based on semantic similarity using TF-IDF vectorization and cosine similarity, with support for fuzzy search, multi-platform filtering, and a responsive UI.
 
-🔗 Live Demo:
-https://movie-recommender-nx2b.onrender.com
+This project focuses on practical ML integration, not just model building.
 
-🚀 Features
+---
 
-Content-based recommendations using TF-IDF + cosine similarity
+## 🚀 Key Features
 
-Fast, memory-safe similarity computation (no precomputed NxN matrix)
+### 🔍 Content-Based Recommendations
+- Uses TF-IDF Vectorization on movie metadata
+- Similarity computed via Cosine Similarity
+- No user accounts required (cold-start safe)
 
-Dynamic movie poster fetching via Google Custom Search API
+### ⚖️ Explicit Metadata Weighting
+To improve recommendation relevance, structured metadata is intentionally up-weighted:
 
-Clean web interface built with Flask + HTML/CSS
+| Field        | Weight |
+|-------------|--------|
+| Genres      | ×10 |
+| Cast        | ×8 |
+| Description | ×6 |
+| Director    | ×5 |
 
-Fully deployed on Render (Free Tier)
+This biases similarity toward genre and cast alignment, while still preserving plot context.
 
-🧠 How It Works
+---
 
-Movie metadata is combined into a single content field
+### ✏️ Fuzzy Search (Misspelling-Tolerant)
+- Handles approximate or misspelled input
+- Implemented using difflib.get_close_matches
+- Prevents empty results caused by minor typos
 
-TF-IDF Vectorization converts text into numerical features
+---
 
-On each request:
+### 📺 Multi-Platform Support
+Combined datasets from:
+- Netflix
+- Disney+
+- Prime Video
 
-The selected movie’s vector is compared against all movies
+Users can filter recommendations by:
+- Content type (Movie / TV Show)
+- Streaming platform
 
-Top-N similar movies are returned
+---
 
-Posters are fetched dynamically and cached for performance
+### ❤️ Local Favourites (No Login)
+- Users can like/save movies
+- Stored using browser localStorage
+- Persists across reloads without authentication
 
-🛠 Tech Stack
-Machine Learning
+---
 
-TF-IDF Vectorizer
+### 🖼️ Smart Poster Fetching
+Hybrid poster retrieval system:
+1. OMDb API (primary source)
+2. Google Custom Search API (fallback)
+3. Local placeholder image if both fail
 
-Cosine similarity (computed on demand using linear_kernel)
+This design prevents broken UI due to API limits or failures.
 
-NumPy, Pandas, Scikit-learn
+---
 
-Backend
+### 📄 Pagination (“Show More”)
+- Initial recommendations are limited
+- Additional results loaded incrementally
+- Improves performance and UI clarity
 
-Python
+---
 
-Flask
+### 🎨 Modern Responsive UI
+- Dark-mode themed interface
+- Card-based layout
+- Built using Bootstrap + custom CSS
+- Mobile-friendly design
 
-Joblib
+---
 
-Frontend
+## 🧠 How Recommendations Work (Pipeline)
 
-HTML
+1. User enters a movie/show name
+2. Input is normalized (lowercased, trimmed)
+3. Fuzzy matching resolves approximate titles
+4. Movie metadata is combined with explicit weighting
+5. TF-IDF vectors are generated
+6. Cosine similarity is computed against the dataset
+7. Results are filtered by platform and content type
+8. Top-N recommendations are returned with posters
 
-CSS
+---
 
-JavaScript (Fetch API)
+## 🧠 Tech Stack
 
-Deployment
+### Frontend
+- HTML5
+- CSS3
+- Bootstrap
+- JavaScript (Fetch API, localStorage)
 
-Render (Free Tier)
+### Backend
+- Python
+- Flask
+- Pandas
 
-Environment variables for API security
+### Machine Learning
+- scikit-learn
+- TF-IDF Vectorizer
+- Cosine Similarity
 
-📂 Project Structure
-├── app.py
-├── requirements.txt
-├── models/
-│   └── movies.pkl
-├── templates/
-│   └── index.html
-├── static/
-│   ├── style.css
-│   └── placeholder.jpg
+### APIs
+- OMDb API
+- Google Custom Search API
 
-🔐 Environment Variables
+---
 
-The following environment variables are required:
+## 📂 Project Structure
 
-GOOGLE_API_KEY = your_api_key
-GOOGLE_CX      = your_search_engine_id(06ee71665e2d143d5)-mine
+├── app.py  
+├── models/  
+│   ├── data.csv              # Netflix + Disney dataset  
+│   └── prime_movies.csv      # Prime Video dataset  
+├── templates/  
+│   └── index.html  
+├── static/  
+│   ├── style.css  
+│   └── placeholder.jpg  
+├── requirements.txt  
+└── README.md  
+
+---
+
+## ⚙️ Environment Variables
+
+Set the following environment variables before running:
+
+export OMDB_API_KEY=your_omdb_api_key
+export GOOGLE_API_KEY=your_google_api_key
+export GOOGLE_CX=your_custom_search_cx
 
 
-(They are not hard-coded for security.)
 
-⚡ Performance Notes
 
-Optimized for 512 MB RAM environments
+▶️ Run Locally
+pip install -r requirements.txt
+python app.py
 
-Uses sparse matrices to avoid memory overflow
 
-First request may be slower due to free-tier cold start
+Open in browser:
 
-Subsequent requests are fast
+http://127.0.0.1:5000
 
-🧪 Future Improvements
+🌐 Deployment
 
-User-based collaborative filtering
+Deployed on Render
 
-Movie search autocomplete
+Uses dynamic port binding via PORT environment variable
 
-Persistent poster caching (Redis)
+Automatically sleeps on inactivity (free tier behavior)
 
-UI enhancements (skeleton loaders, animations)
+Secrets managed using platform environment variables
 
-API rate limiting
+🧩 Future Improvements
 
-📌 Learning Outcomes
+Recommendation evaluation metrics
 
-Practical ML system design
+Trending movies based on interaction frequency
 
-Memory-efficient similarity computation
+Backend-stored favourites with user accounts
 
-Real-world cloud deployment
+Weighted similarity tuning via validation
 
-Debugging Linux vs Windows issues
+Performance optimizations for large datasets
 
-Secure API handling
+👨‍💻 Author
 
-🧑‍💻 Author
+Gunji John
+B.Tech Computer Science & Engineering
+IIT (ISM) Dhanbad
 
-John Gunji
-B.Tech CSE | IIT Dhanbad
-Inter interests: Machine Learning · Data Science · Web Development
+GitHub: https://github.com/johngunji
+
+📜 License
+
+This project is intended for learning and portfolio purposes.
